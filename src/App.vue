@@ -22,6 +22,19 @@ import HelloWorld from './components/HelloWorld.vue'
 </template>
 
 <style>
+/* Scroll */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #00BD7E;
+}
+::-webkit-scrollbar-thumb {
+  background: #00BD7E;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00BD7E;
+}
 .notfic {
   background: #00BD7E !important;
   padding: 20px;

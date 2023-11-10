@@ -16,10 +16,15 @@
     <div class="clearfix"></div>
     <vue-good-table
       v-if="statsRows && statsRows.length > 0"
+      max-height="300px"
+      theme="nocturnal"
       :columns="stats"
       :rows="statsRows"/>
+    <div class="clearfix"></div>
     <vue-good-table
       v-if="matchRows && matchRows.length > 0"
+      max-height="300px"
+      theme="nocturnal"
       :columns="match"
       :rows="matchRows"/>
   </div>
@@ -30,7 +35,7 @@ import config from '../../conf/index.js'
 import axios from '../helpers/axios'
 import 'vue-good-table-next/dist/vue-good-table-next.css'
 import { VueGoodTable } from 'vue-good-table-next';
-import { useNotification } from "@kyvg/vue3-notification";
+import { convertInput } from '../helpers/converter'
 
 export default {
   name: 'stats',
@@ -82,27 +87,37 @@ export default {
     };
   },
   methods: {
+    getTimeDiff (dateCreatedAt) {
+      if (dateCreatedAt) {
+        const dt1 = new Date();
+        const dt2 = new Date(dateCreatedAt);
+        var diff = Math.abs(dt1 - dt2);
+        var minutes = Math.floor((diff/1000)/60);
+        return minutes;
+      }
+    },
     getData () {
       this.matchRows = [];
       this.statsRows = [];
       axios._get(config.BASE_URL + this.platform + '/players?filter[playerNames]=' + this.playerName).then(res1 => {
         if (res1) {
           const accId = res1.data.data[0].id;
-          // for (let i = 0; i < 3; i++) {
-          //   const matchId = res1.data.data[0].relationships.matches.data[i].id;
-          //   axios._get(config.BASE_URL + this.platform + '/matches/' + matchId).then(res3 => {
-          //     if (res3) {
-          //       const data = {
-          //         map: res3.data.data.attributes.gameModeStats.duo,
-          //         time: res3.data.data.attributes.gameModeStats.solo,
-          //         dmg: res3.data.data.attributes.gameModeStats.squad,
-          //         kills: res3.data.data.attributes.gameModeStats.solo,
-          //         rank: res3.data.data.attributes.gameModeStats.squad
-          //       }
-          //       this.matchRows.push(data)
-          //     }
-          //   })
-          // }
+          for (let i = 0; i < 5; i++) {
+            const matchId = res1.data.data[0].relationships.matches.data[i].id;
+            axios._get(config.BASE_URL + this.platform + '/matches/' + matchId).then(res3 => {
+              if (res3) {
+                const playerStats = res3.data.included.find(r => r.type === 'participant' && r.attributes.stats.playerId === accId);
+                const data = {
+                  map: convertInput(res3.data.data.attributes.mapName),
+                  time: this.getTimeDiff(res3.data.data.attributes.createdAt) + ' minutes ago',
+                  dmg: Math.round(playerStats.attributes.stats.damageDealt),
+                  kills: playerStats.attributes.stats.kills,
+                  rank: playerStats.attributes.stats.winPlace
+                }
+                this.matchRows.push(data)
+              }
+            })
+          }
           axios._get(config.BASE_URL + this.platform + '/players/' + accId + '/seasons/lifetime?filter[gamepad]=false').then(res2 => {
             if (res2) {
               const data = {

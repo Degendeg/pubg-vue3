@@ -10,10 +10,11 @@ const HTTP = axios.create({
 })
 
 HTTP.interceptors.request.use(function (config) {
-  if (config && config.baseURL.includes('pubg')) {
+  if (config && config.url.includes('pubg')) {
     config.headers['Authorization'] = 'Bearer ' + config.apiKey
     return config
   }
+  return config
 }, function (error) {
   return Promise.reject(error)
 })
